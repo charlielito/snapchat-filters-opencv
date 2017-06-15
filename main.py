@@ -1,6 +1,4 @@
-# impora paquetes necesarios
-# Librerias necesarias: con pip >>
-# pip install opencv-python
+# Requirements:
 # pip install tk
 # pip install pillow
 
@@ -13,35 +11,37 @@ from threading import Thread
 from os import listdir
 from os.path import isfile, join
 
-### Funciones para saber que accesorio queremos poner
+### Function to set wich sprite must be drawn
 def poner_sombrero():
         global SPRITES
-        SPRITES[0] = (1 - SPRITES[0]) #niega el valor
+        SPRITES[0] = (1 - SPRITES[0]) #not actual value
 
 def poner_bigote():
         global SPRITES
-        SPRITES[1] = (1 - SPRITES[1]) #niega el valor
+        SPRITES[1] = (1 - SPRITES[1]) #not actual value
 
 def poner_moscas():
         global SPRITES
-        SPRITES[2] = (1 - SPRITES[2]) #niega el valor
+        SPRITES[2] = (1 - SPRITES[2]) #not actual value
 
 def poner_gafas():
         global SPRITES
-        SPRITES[3] = (1 - SPRITES[3]) #niega el valor
+        SPRITES[3] = (1 - SPRITES[3]) #not actual value
 
-#dibujar sprite encima de la imagen dada
-#hace uso del canal alpha del sprite (background transparente) para saber que pixeles debe reemplazar
-def dibujar_sprite(frame, sprite, x_offset, y_offset):
+#Draws sprite over a image
+#It uses the alpha chanel to see which pixels need to be reeplaced
+# Input: image, sprite: numpy arrays
+#       
+def draw_sprite(frame, sprite, x_offset, y_offset):
         (M,N) = (sprite.shape[0], sprite.shape[1])
-        #para cada canal RGB de la imagen
+        #for each RGB chanel
         for c in range(3):
-                #canal 4 es el alpha, si es 255 es parte de la imagen, si es 0 es background transparente
+                #chanel 4 is alpha: 255 is not transpartne, 0 is transparent background
                 frame[y_offset:y_offset+M, x_offset:x_offset+N, c] =  \
                 sprite[:,:,c] * (sprite[:,:,3]/255.0) +  frame[y_offset:y_offset+M, x_offset:x_offset+N, c] * (1.0 - sprite[:,:,3]/255.0)
         return frame
 
-#detecta la cara(s) dentro de la imagen y devuelve la posicion
+#Returns the rectangles
 def detectar_caras(img,faceCascade,scaleFact):
     #Img es una imagen a color
     #faceCascade es un clasificador tipo cascada cv2.CascadeClassifier
@@ -95,7 +95,7 @@ def cvloop(run_event):
 
                         (sprite, y_final) = ajustar_sprite_cabeza(sprite, w, y)
                         
-                        image = dibujar_sprite(image,sprite,x, y_final)
+                        image = draw_sprite(image,sprite,x, y_final)
                 #bigote
                 if SPRITES[1]:
                         sprite = cv2.imread("./sprites/mustache.png",-1)
@@ -106,7 +106,7 @@ def cvloop(run_event):
                         factor = 1.0*(w/2)/w_sprite
                         sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
                         
-                        image = dibujar_sprite(image,sprite,xpos,ypos)
+                        image = draw_sprite(image,sprite,xpos,ypos)
                 #moscas
                 if SPRITES[2]:
                         #para hacer la "animacion" de las moscas, va leyendo imagenes distintas cada loop
@@ -115,7 +115,7 @@ def cvloop(run_event):
 
                         (sprite, y_final) = ajustar_sprite_cabeza(sprite, w, y)
 
-                        image = dibujar_sprite(image,sprite,x,y_final)
+                        image = draw_sprite(image,sprite,x,y_final)
                         i+=1
                         i = 0 if i >= len(moscas) else i #cuando termine de leer todas las imagenes en la carpeta, reinicia
 
@@ -129,7 +129,7 @@ def cvloop(run_event):
                         factor = 1.0*w/w_sprite
                         sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
                         
-                        image = dibujar_sprite(image,sprite,xpos,ypos)
+                        image = draw_sprite(image,sprite,xpos,ypos)
                 
                 # OpenCV representa imagenes en orden BGR; pero PIL en RGB, hay que cambiar orden
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -173,11 +173,11 @@ subprocess.start() #inicia el hilo
 # Funcion para manejar que todo se cierre bien, es decir, el hilo principal acabe sin errores
 def cerrar_ventana():
         global root, run_event, subprocess
-        print "Cerrando thread opencv..."
+        print "Closing thread opencv..."
         run_event.clear()
         subprocess.join()
         root.destroy()
-        print "Todo cerrado correctamente! Chao"
+        print "All closed! Chao"
         
 # Activa la funcion cuando se cierra la ventana de la GUI
 root.protocol("WM_DELETE_WINDOW", cerrar_ventana)
