@@ -8,7 +8,7 @@ import datetime
 import imutils
 import time
 import dlib
-from utils import applyAffineTransform, rectContains, calculateDelaunayTriangles, warpTriangle, face_swap3
+from utils import applyAffineTransform, rectContains, calculateDelaunayTriangles, warpTriangle, face_swap3, face_swap
 
 if __name__ == '__main__' :
 
@@ -27,7 +27,9 @@ if __name__ == '__main__' :
     video_capture = cv2.VideoCapture(0)
     ret, img = video_capture.read()
     cv2.imshow("Face Swapped", img)
-
+    img = cv2.imread('ji2.jpg')
+    img2 = cv2.imread('donald_trump.jpg')
+    '''
     while (True):
         print "what"
 
@@ -42,6 +44,8 @@ if __name__ == '__main__' :
         # if the `q` key was pressed, break from the loop
         if key == ord("q"):
         	break
-
+    '''
+    output = face_swap3(img, detector, predictor)
+    cv2.imwrite('lol3.jpg',output)
     cv2.destroyAllWindows()
     video_capture.release()
