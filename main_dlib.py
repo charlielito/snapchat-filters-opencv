@@ -10,6 +10,7 @@ import threading
 from threading import Thread
 from os import listdir
 from os.path import isfile, join
+import dlib
 
 ### Function to set wich sprite must be drawn
 def put_hat():
@@ -65,11 +66,11 @@ def apply_Haar_filter(img, path_filter,scaleFact = 1.1, minNeigh = 5, minSizeW =
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    features = haar_cascade .detectMultiScale(
+    feature = haar_cascade .detectMultiScale(
         gray,
         scaleFactor=scaleFact,
         minNeighbors=minNeigh,
-        minSize=(minSizeW, minSizeW),
+        minSize=(minSize, minSize),
         flags=cv2.CASCADE_SCALE_IMAGE
     )
     return features
@@ -101,13 +102,18 @@ def cvloop(run_event):
         video_capture = cv2.VideoCapture(0) #read from webcam
         (x,y,w,h) = (0,0,10,10)
 
+
+
+        detector = dlib.get_frontal_face_detector()
+
         while run_event.is_set(): #while the thread is active we loop
             ret, image = video_capture.read()
-
-            faces = apply_Haar_filter(image, "./filters/haarcascade_frontalface_default.xml", 1.3 , 5, 30)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            faces = detector(gray, 0)
             if (len(faces) != 0 ): #if there are faces
                     #take first face found
-                    (x,y,w,h) = (faces[0,0],faces[0,1],faces[0,2],faces[0,3])
+                    face = faces[0]
+                    (x,y,w,h) = (face.left(), face.top(), face.width(), face.height())
             #hat condition
             if SPRITES[0]:
                     sprite = cv2.imread("./sprites/hat.png",-1)
@@ -159,6 +165,7 @@ def cvloop(run_event):
             # Actualize the image in the panel to show it
             panelA.configure(image=image)
             panelA.image = image
+
         video_capture.release()
 
 # Initialize GUI object
@@ -201,7 +208,6 @@ def terminate():
         #action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
         root.destroy()
         print "All closed! Chao"
-
 # When the GUI is closed it actives the terminate function
 root.protocol("WM_DELETE_WINDOW", terminate)
 root.mainloop() #creates loop of GUI

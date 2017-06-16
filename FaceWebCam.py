@@ -2,53 +2,26 @@ import cv2
 import sys
 import numpy as np
 
+def apply_Haar_filter(img, path_filter,scaleFact = 1.1, minNeigh = 5, minSizeW = 30):
+    haar_cascade = cv2.CascadeClassifier(path_filter)
 
-def detectFaces(img,faceCascade,rectangleColor,scaleFact,faceCascade2=None):
-    #Img is a color imag
-    #faceCascade is a cv2.CascadeClassifier)
-    #rectange is a tuple in the form (B,G,R) B,G,R >=0 and <=255 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    faces = faceCascade.detectMultiScale(
+    features = haar_cascade .detectMultiScale(
         gray,
         scaleFactor=scaleFact,
-        minNeighbors=5,
-        minSize=(30, 30),
+        minNeighbors=minNeigh,
+        minSize=(minSizeW, minSizeW),
         flags=cv2.CASCADE_SCALE_IMAGE
     )
+    return features
 
-    # Draw a rectangle around the faces
-    for (x, y, w, h) in faces:
-        cv2.rectangle(img, (x, y), (x+w, y+h), rectangleColor, 2)
-        if faceCascade2 != None:
-            img2 = gray[y:y+h,x:x+w]
-            img2 = gray[y + h/2:y+h,x:x+w] #for mouth
-            y = y +h/2
-            cv2.imshow('Video2',img2)
-            faces2 = faceCascade2.detectMultiScale(
-            img2,
-            scaleFactor=1.1,
-            minNeighbors=10,
-            minSize=(30, 30),
-            flags=cv2.CASCADE_SCALE_IMAGE
-            )
-            for (x2,y2,w2,h2) in faces2:
-                #cv2.rectangle(img, (x+x2, y+y2), (x + x2+w2, y + y2+h2), (0,0,255), 2)
-                cv2.ellipse(img, (x+x2+w2/2, y+y2+h2/2), (w2/2, h2/2),0,0,360, rectangleColor, 2)
+#Filters path
+haar_faces = './filters/haarcascade_frontalface_default.xml'
+haar_eyes = './filters/haarcascade_eye.xml'
+haar_mouth = './filters/Mouth.xml'
+haar_nose = './filters/Nose.xml'
 
-    
-
-
-#Initialize Filters
-cascPath = './filters/haarcascade_frontalface_default.xml'
-cascPath2 = './filters/haarcascade_profileface.xml'
-cascPath3 = './filters/haarcascade_smile.xml'
-cascPath3 = './filters/haarcascade_eye.xml'
-cascPath3 = './filters/Mouth.xml'
-#cascPath3 = './filters/Nose.xml'
-faceCascade = cv2.CascadeClassifier(cascPath)
-faceCascade2 = cv2.CascadeClassifier(cascPath2)
-faceCascade3 = cv2.CascadeClassifier(cascPath3)
 #config WebCam
 video_capture = cv2.VideoCapture(0)
 cv2.imshow('Video', np.empty((5,5),dtype=float))
@@ -58,13 +31,36 @@ while cv2.getWindowProperty('Video', 0) >= 0:
     # Capture frame-by-frame
     ret, frame = video_capture.read()
 
-    detectFaces(frame,faceCascade,(0,255,0),1.3,faceCascade3)
-    detectFaces(frame,faceCascade2,(0,255,255),1.3)
+    frame = cv2.imread('faceswap/lol2.jpg')
+
+    faces = apply_Haar_filter(frame, haar_faces, 1.3 , 5, 30)
+
+    for (x, y, w, h) in faces:
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (255,0,0), 2) #blue
+
+        sub_img = frame[y:y+h,x:x+w,:]
+        eyes = apply_Haar_filter(sub_img, haar_eyes, 1.3 , 10, 10)
+        for (x2, y2, w2, h2) in eyes:
+            cv2.rectangle(frame, (x+x2, y+y2), (x + x2+w2, y + y2+h2), (255,255,0), 2)
+
+        nose = apply_Haar_filter(sub_img, haar_nose, 1.1 , 8, 10)
+        for (x2, y2, w2, h2) in nose:
+            cv2.rectangle(frame, (x+x2, y+y2), (x + x2+w2, y + y2+h2), (0,0,255), 2) #red
+
+        sub_img2 = frame[y + h/2:y+h,x:x+w,:] #only analize half of face for mouth
+        mouth = apply_Haar_filter(sub_img2, haar_mouth, 1.2 , 10, 10)
+        for (x2, y2, w2, h2) in mouth:
+            cv2.rectangle(frame, (x+x2, y+h/2+y2), (x + x2+w2, y+h/2+y2+h2), (0,255,0), 2) #green
+        #cv2.imshow('Face', sub_img)
+        #cv2.imshow('Face/2', sub_img2)
+
     # Display the resulting frame
     cv2.imshow('Video', frame)
-    #detectFaces(img,faceCascade3)
 
-    cv2.waitKey(1)
+    key = cv2.waitKey(1) & 0xFF
+    # if the `q` key was pressed, break from the loop
+    if key == ord("q"):
+    	break
 
 # When everything is done, release the capture
 video_capture.release()
