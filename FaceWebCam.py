@@ -2,12 +2,10 @@ import cv2
 import sys
 import numpy as np
 
-def apply_Haar_filter(img, path_filter,scaleFact = 1.1, minNeigh = 5, minSizeW = 30):
-    haar_cascade = cv2.CascadeClassifier(path_filter)
-
+def apply_Haar_filter(img, haar_cascade,scaleFact = 1.1, minNeigh = 5, minSizeW = 30):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    features = haar_cascade .detectMultiScale(
+    features = haar_cascade.detectMultiScale(
         gray,
         scaleFactor=scaleFact,
         minNeighbors=minNeigh,
@@ -17,10 +15,11 @@ def apply_Haar_filter(img, path_filter,scaleFact = 1.1, minNeigh = 5, minSizeW =
     return features
 
 #Filters path
-haar_faces = './filters/haarcascade_frontalface_default.xml'
-haar_eyes = './filters/haarcascade_eye.xml'
-haar_mouth = './filters/Mouth.xml'
-haar_nose = './filters/Nose.xml'
+haar_faces = cv2.CascadeClassifier('./filters/haarcascade_frontalface_default.xml')
+haar_eyes = cv2.CascadeClassifier('./filters/haarcascade_eye.xml')
+haar_mouth = cv2.CascadeClassifier('./filters/Mouth.xml')
+haar_nose = cv2.CascadeClassifier('./filters/Nose.xml')
+
 
 #config WebCam
 video_capture = cv2.VideoCapture(0)

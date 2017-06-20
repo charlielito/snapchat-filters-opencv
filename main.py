@@ -57,15 +57,13 @@ def detectar_caras(img,faceCascade,scaleFact):
     return faces
 
 # Returns the rectangles
-# Img is a rgb image
-# path_filter is the path to the haar .xml file
+# Img is a BGR image
+# haar_cascade is a cv2.CascadeClassifier object
 # the other inputs are the filter parameters
-def apply_Haar_filter(img, path_filter,scaleFact = 1.1, minNeigh = 5, minSizeW = 30):
-    haar_cascade = cv2.CascadeClassifier(path_filter)
-
+def apply_Haar_filter(img, haar_cascade,scaleFact = 1.1, minNeigh = 5, minSizeW = 30):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    features = haar_cascade .detectMultiScale(
+    features = haar_cascade.detectMultiScale(
         gray,
         scaleFactor=scaleFact,
         minNeighbors=minNeigh,
@@ -88,7 +86,7 @@ def adjust_sprite2head(sprite, head_width, head_ypos):
                 y_orig = 0 #the sprite then begins at the top of the image
         return (sprite, y_orig)
 
-#Loop pricipal donde se manejan los accesorios y funciones openCV
+#Principal Loop where openCV (magic) ocurs
 def cvloop(run_event):
         global panelA
         global SPRITES
@@ -99,56 +97,82 @@ def cvloop(run_event):
         flies = [f for f in listdir(dir_) if isfile(join(dir_, f))] #image of flies to make the "animation"
         i = 0
         video_capture = cv2.VideoCapture(0) #read from webcam
-        (x,y,w,h) = (0,0,10,10)
+        (x,y,w,h) = (0,0,10,10) #whatever initial values
+
+        #Filters path
+        haar_faces = cv2.CascadeClassifier('./filters/haarcascade_frontalface_default.xml')
+        haar_eyes = cv2.CascadeClassifier('./filters/haarcascade_eye.xml')
+        haar_mouth = cv2.CascadeClassifier('./filters/Mouth.xml')
+        haar_nose = cv2.CascadeClassifier('./filters/Nose.xml')
 
         while run_event.is_set(): #while the thread is active we loop
             ret, image = video_capture.read()
 
-            faces = apply_Haar_filter(image, "./filters/haarcascade_frontalface_default.xml", 1.3 , 5, 30)
-            if (len(faces) != 0 ): #if there are faces
-                    #take first face found
-                    (x,y,w,h) = (faces[0,0],faces[0,1],faces[0,2],faces[0,3])
-            #hat condition
-            if SPRITES[0]:
-                    sprite = cv2.imread("./sprites/hat.png",-1)
+            faces = apply_Haar_filter(image, haar_faces, 1.3 , 5, 30)
+            for (x,y,w,h) in faces: #if there are faces
+                    #take first face found (x,y,w,h) = (faces[0,0],faces[0,1],faces[0,2],faces[0,3])
 
-                    (sprite, y_final) = adjust_sprite2head(sprite, w, y)
+                    #hat condition
+                    if SPRITES[0]:
+                            sprite = cv2.imread("./sprites/hat.png",-1)
 
-                    image = draw_sprite(image,sprite,x, y_final)
-            #mustache condition
-            if SPRITES[1]:
-                    sprite = cv2.imread("./sprites/mustache.png",-1)
+                            (sprite, y_final) = adjust_sprite2head(sprite, w, y)
 
-                    ypos = y + 2*h/3 #empiricamente el bigote esta a un 2/3 de la cara (desde el pelo)
-                    xpos = x + w/4 #empiricamente el ancho del bigote es la mitad
-                    (h_sprite,w_sprite) = (sprite.shape[0], sprite.shape[1])
-                    factor = 1.0*(w/2)/w_sprite
-                    sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
+                            image = draw_sprite(image,sprite,x, y_final)
+                    #mustache condition
+                    if SPRITES[1]:
+                            sprite = cv2.imread("./sprites/mustache.png",-1)
 
-                    image = draw_sprite(image,sprite,xpos,ypos)
-            #flies condition
-            if SPRITES[2]:
-                    #to make the "animation" we read each time a different image of that folder
-                    # the images are placed in the correct order to give the animation impresion
-                    sprite = cv2.imread(dir_+flies[i],-1)
+                            ypos = y + 2*h/3 #empiricamente el bigote esta a un 2/3 de la cara (desde el pelo)
+                            xpos = x + w/4 #empiricamente el ancho del bigote es la mitad
+                            (h_sprite,w_sprite) = (sprite.shape[0], sprite.shape[1])
+                            factor = 1.0*(w/2)/w_sprite
+                            
 
-                    (sprite, y_final) = adjust_sprite2head(sprite, w, y)
+                            sub_img = image[y + h/2:y+h,x:x+w,:] #only analize half of face for mouth
+                            mouth = apply_Haar_filter(sub_img, haar_mouth, 1.3 , 10, 10)
+                            if len(mouth)!=0:
+                                    factor = 1.0*(mouth[0,2])/w_sprite
+                                    xpos, ypos = mouth[0,0]+x, mouth[0,1]+y+h/2-int(h_sprite*factor)
+                                    for (x2, y2, w2, h2) in mouth:
+                                            cv2.rectangle(image, (x+x2, y+h/2+y2), (x + x2+w2, y+h/2+y2+h2), (0,255,0), 2) #green
 
-                    image = draw_sprite(image,sprite,x,y_final)
-                    i+=1
-                    i = 0 if i >= len(flies) else i #when done with all images of that folder, begin again
+                            
+                            sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
+                            image = draw_sprite(image,sprite,xpos,ypos)
+                    #flies condition
+                    if SPRITES[2]:
+                            #to make the "animation" we read each time a different image of that folder
+                            # the images are placed in the correct order to give the animation impresion
+                            sprite = cv2.imread(dir_+flies[i],-1)
 
-            #glasses condition
-            if SPRITES[3]:
-                    sprite = cv2.imread("./sprites/glasses.png",-1)
+                            (sprite, y_final) = adjust_sprite2head(sprite, w, y)
 
-                    ypos = y + h/3 #empiricamente los ojos estan a un 1/3 de la cara (desde el pelo)
-                    xpos = x #ancho de las gafas igual a la cara
-                    (h_sprite,w_sprite) = (sprite.shape[0], sprite.shape[1])
-                    factor = 1.0*w/w_sprite
-                    sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
+                            image = draw_sprite(image,sprite,x,y_final)
+                            i+=1
+                            i = 0 if i >= len(flies) else i #when done with all images of that folder, begin again
 
-                    image = draw_sprite(image,sprite,xpos,ypos)
+                    #glasses condition
+                    if SPRITES[3]:
+                            sprite = cv2.imread("./sprites/glasses.png",-1)
+
+                            ypos = y + h/3 #empiricamente los ojos estan a un 1/3 de la cara (desde el pelo)
+                            xpos = x #ancho de las gafas igual a la cara
+                            (h_sprite,w_sprite) = (sprite.shape[0], sprite.shape[1])
+                            factor = 1.0*w/w_sprite
+
+
+                            sub_img = image[y:y+h,x:x+w,:] #only analize half of face for mouth
+                            eyes = apply_Haar_filter(sub_img, haar_eyes, 1.3 , 10, 10)
+                            if len(eyes)!=0:
+                                    xpos, ypos = x, eyes[0,1]+y
+                                    for (x2, y2, w2, h2) in eyes:
+                                            cv2.rectangle(image, (x+x2, y+y2), (x + x2+w2, y+y2+h2), (0,255,0), 2) #green
+
+
+                            
+                            sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
+                            image = draw_sprite(image,sprite,xpos,ypos)
 
             # OpenCV represents image as BGR; PIL but RGB, we need to change the chanel order
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -198,7 +222,7 @@ def terminate():
         global root, run_event, action
         print "Closing thread opencv..."
         run_event.clear()
-        #action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
+        action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
         root.destroy()
         print "All closed! Chao"
 
