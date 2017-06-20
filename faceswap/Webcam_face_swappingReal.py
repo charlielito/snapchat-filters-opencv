@@ -29,7 +29,7 @@ if __name__ == '__main__' :
     cv2.imshow("Face Swapped", img)
     img = cv2.imread('ji2.jpg')
     img2 = cv2.imread('donald_trump.jpg')
-    '''
+
     while (True):
         print "what"
 
@@ -44,8 +44,8 @@ if __name__ == '__main__' :
         # if the `q` key was pressed, break from the loop
         if key == ord("q"):
         	break
-    '''
-    output = face_swap3(img, detector, predictor)
-    cv2.imwrite('lol3.jpg',output)
+
+    #output = face_swap3(img, detector, predictor)
+    #cv2.imwrite('lol3.jpg',output)
     cv2.destroyAllWindows()
     video_capture.release()

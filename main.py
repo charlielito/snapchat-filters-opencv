@@ -31,7 +31,7 @@ def put_glasses():
 #Draws sprite over a image
 #It uses the alpha chanel to see which pixels need to be reeplaced
 # Input: image, sprite: numpy arrays
-#
+# output: resulting merged image
 def draw_sprite(frame, sprite, x_offset, y_offset):
         (M,N) = (sprite.shape[0], sprite.shape[1])
         #for each RGB chanel
@@ -40,21 +40,6 @@ def draw_sprite(frame, sprite, x_offset, y_offset):
                 frame[y_offset:y_offset+M, x_offset:x_offset+N, c] =  \
                 sprite[:,:,c] * (sprite[:,:,3]/255.0) +  frame[y_offset:y_offset+M, x_offset:x_offset+N, c] * (1.0 - sprite[:,:,3]/255.0)
         return frame
-
-# Returns the rectangles
-def detectar_caras(img,faceCascade,scaleFact):
-    #Img es una imagen a color
-    #faceCascade es un clasificador tipo cascada cv2.CascadeClassifier
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    faces = faceCascade.detectMultiScale(
-        gray,
-        scaleFactor=scaleFact,
-        minNeighbors=5,
-        minSize=(30, 30),
-        flags=cv2.CASCADE_SCALE_IMAGE
-    )
-    return faces
 
 # Returns the rectangles
 # Img is a BGR image
@@ -86,17 +71,22 @@ def adjust_sprite2head(sprite, head_width, head_ypos):
                 y_orig = 0 #the sprite then begins at the top of the image
         return (sprite, y_orig)
 
+
+def apply_sprite(image, path2sprite,w,x,y):
+    sprite = cv2.imread(path2sprite,-1)
+    (sprite, y_final) = adjust_sprite2head(sprite, w, y)
+    image = draw_sprite(image,sprite,x, y_final)
+
+
 #Principal Loop where openCV (magic) ocurs
 def cvloop(run_event):
         global panelA
         global SPRITES
 
-        faceCascade = cv2.CascadeClassifier("./filters/haarcascade_frontalface_default.xml")
-
         dir_ = "./sprites/flyes/"
         flies = [f for f in listdir(dir_) if isfile(join(dir_, f))] #image of flies to make the "animation"
         i = 0
-        video_capture = cv2.VideoCapture(0) #read from webcam
+        video_capture = cv2.VideoCapture(1) #read from webcam
         (x,y,w,h) = (0,0,10,10) #whatever initial values
 
         #Filters path
@@ -114,11 +104,8 @@ def cvloop(run_event):
 
                     #hat condition
                     if SPRITES[0]:
-                            sprite = cv2.imread("./sprites/hat.png",-1)
+                        apply_sprite(image, "./sprites/hat.png",w,x,y)
 
-                            (sprite, y_final) = adjust_sprite2head(sprite, w, y)
-
-                            image = draw_sprite(image,sprite,x, y_final)
                     #mustache condition
                     if SPRITES[1]:
                             sprite = cv2.imread("./sprites/mustache.png",-1)
@@ -127,28 +114,25 @@ def cvloop(run_event):
                             xpos = x + w/4 #empiricamente el ancho del bigote es la mitad
                             (h_sprite,w_sprite) = (sprite.shape[0], sprite.shape[1])
                             factor = 1.0*(w/2)/w_sprite
-                            
+
 
                             sub_img = image[y + h/2:y+h,x:x+w,:] #only analize half of face for mouth
                             mouth = apply_Haar_filter(sub_img, haar_mouth, 1.3 , 10, 10)
                             if len(mouth)!=0:
-                                    factor = 1.0*(mouth[0,2])/w_sprite
-                                    xpos, ypos = mouth[0,0]+x, mouth[0,1]+y+h/2-int(h_sprite*factor)
+                                    size_mustache = 1.2 #how many times bigger than mouth
+                                    factor = 1.0*(mouth[0,2]*size_mustache)/w_sprite
+                                    xpos, ypos = mouth[0,0]+x - int(mouth[0,2]*(size_mustache-1)/2), mouth[0,1]+y+h/2-int(h_sprite*factor)
                                     for (x2, y2, w2, h2) in mouth:
                                             cv2.rectangle(image, (x+x2, y+h/2+y2), (x + x2+w2, y+h/2+y2+h2), (0,255,0), 2) #green
 
-                            
+
                             sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
                             image = draw_sprite(image,sprite,xpos,ypos)
                     #flies condition
                     if SPRITES[2]:
                             #to make the "animation" we read each time a different image of that folder
                             # the images are placed in the correct order to give the animation impresion
-                            sprite = cv2.imread(dir_+flies[i],-1)
-
-                            (sprite, y_final) = adjust_sprite2head(sprite, w, y)
-
-                            image = draw_sprite(image,sprite,x,y_final)
+                            apply_sprite(image, dir_+flies[i],w,x,y)
                             i+=1
                             i = 0 if i >= len(flies) else i #when done with all images of that folder, begin again
 
@@ -170,7 +154,7 @@ def cvloop(run_event):
                                             cv2.rectangle(image, (x+x2, y+y2), (x + x2+w2, y+y2+h2), (0,255,0), 2) #green
 
 
-                            
+
                             sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
                             image = draw_sprite(image,sprite,xpos,ypos)
 
@@ -222,7 +206,7 @@ def terminate():
         global root, run_event, action
         print "Closing thread opencv..."
         run_event.clear()
-        action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
+        #action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
         root.destroy()
         print "All closed! Chao"
 
