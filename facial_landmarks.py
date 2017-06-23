@@ -14,7 +14,7 @@ model = "shape_predictor_68_face_landmarks.dat"
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(model) # link to model: http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
 
-video_capture = cv2.VideoCapture(1)
+video_capture = cv2.VideoCapture(0)
 cv2.imshow('Video', np.empty((5,5),dtype=float))
 
 #points are tuples in the form (x,y)
@@ -39,13 +39,16 @@ while cv2.getWindowProperty('Video', 0) >= 0:
         shape = predictor(gray, rect)
     	shape = face_utils.shape_to_np(shape)
 
+
         incl = calculate_inclination(shape[17], shape[26])
-        print incl
+        #print incl
         img = cv2.imread("./sprites/hat.png")
         rows,cols = img.shape[0], img.shape[1]
         M = cv2.getRotationMatrix2D((cols/2,rows/2),incl,1)
         dst = cv2.warpAffine(img,M,(cols,rows))
         cv2.imshow('sprite',dst)
+
+        print shape[62][1] -shape[66][1]
 
         x,y, w, h = rect.left(), rect.top(), rect.width(), rect.height()
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)

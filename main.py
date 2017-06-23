@@ -86,7 +86,7 @@ def cvloop(run_event):
         dir_ = "./sprites/flyes/"
         flies = [f for f in listdir(dir_) if isfile(join(dir_, f))] #image of flies to make the "animation"
         i = 0
-        video_capture = cv2.VideoCapture(1) #read from webcam
+        video_capture = cv2.VideoCapture(0) #read from webcam
         (x,y,w,h) = (0,0,10,10) #whatever initial values
 
         #Filters path
@@ -128,13 +128,6 @@ def cvloop(run_event):
 
                             sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
                             image = draw_sprite(image,sprite,xpos,ypos)
-                    #flies condition
-                    if SPRITES[2]:
-                            #to make the "animation" we read each time a different image of that folder
-                            # the images are placed in the correct order to give the animation impresion
-                            apply_sprite(image, dir_+flies[i],w,x,y)
-                            i+=1
-                            i = 0 if i >= len(flies) else i #when done with all images of that folder, begin again
 
                     #glasses condition
                     if SPRITES[3]:
@@ -157,6 +150,14 @@ def cvloop(run_event):
 
                             sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
                             image = draw_sprite(image,sprite,xpos,ypos)
+
+                    #flies condition
+                    if SPRITES[2]:
+                            #to make the "animation" we read each time a different image of that folder
+                            # the images are placed in the correct order to give the animation impresion
+                            apply_sprite(image, dir_+flies[i],w,x,y)
+                            i+=1
+                            i = 0 if i >= len(flies) else i #when done with all images of that folder, begin again
 
             # OpenCV represents image as BGR; PIL but RGB, we need to change the chanel order
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
