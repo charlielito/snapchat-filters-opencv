@@ -12,7 +12,8 @@ from os.path import isfile, join
 import time
 
 import dlib
-
+from imutils import face_utils, rotate_bound
+import math
 
 ### Function to set wich sprite must be drawn
 def put_sprite(num):
@@ -67,15 +68,17 @@ def adjust_sprite2head(sprite, head_width, head_ypos):
     return (sprite, y_orig)
 
 # Applies sprite to image detected face's coordinates and adjust it to head
-def apply_sprite(image, path2sprite,w,x,y):
+def apply_sprite(image, path2sprite,w,x,y, angle):
     sprite = cv2.imread(path2sprite,-1)
+    sprite = rotate_bound(sprite, angle)
     (sprite, y_final) = adjust_sprite2head(sprite, w, y)
     image = draw_sprite(image,sprite,x, y_final)
 
 # Applies sprite to image in a specific haar filter detecting a feature with other parameters:
 #
-def apply_sprite2feature(image, sprite_path, haar_filter, x_offset, y_offset, y_offset_image, adjust2feature, desired_width, x, y, w, h):
+def apply_sprite2feature(image, sprite_path, haar_filter, x_offset, y_offset, y_offset_image, adjust2feature, desired_width, x, y, w, h, angle):
     sprite = cv2.imread(sprite_path,-1)
+    sprite = rotate_bound(sprite, angle)
     (h_sprite,w_sprite) = (sprite.shape[0], sprite.shape[1])
 
     xpos = x + x_offset
@@ -97,6 +100,21 @@ def apply_sprite2feature(image, sprite_path, haar_filter, x_offset, y_offset, y_
     sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
     image = draw_sprite(image,sprite,xpos,ypos)
 
+#points are tuples in the form (x,y)
+# returns angle between points in degrees
+def calculate_inclination(point1, point2):
+    x1,x2,y1,y2 = point1[0], point2[0], point1[1], point2[1]
+    incl = 180/math.pi*math.atan((float(y2-y1))/(x2-x1))
+    return incl
+
+#Rotates image by angle degrees
+def rotate_sprite(img, angle):
+    rows,cols = img.shape[0], img.shape[1]
+    M = cv2.getRotationMatrix2D((cols/2,rows/2),angle,1)
+    dst = cv2.warpAffine(img,M,(cols,rows))
+    return dst
+
+
 #Principal Loop where openCV (magic) ocurs
 def cvloop(run_event):
     global panelA
@@ -114,6 +132,10 @@ def cvloop(run_event):
     haar_mouth = cv2.CascadeClassifier('./filters/Mouth.xml')
     haar_nose = cv2.CascadeClassifier('./filters/Nose.xml')
 
+    #Facial landmarks
+    print("[INFO] loading facial landmark predictor...")
+    model = "shape_predictor_68_face_landmarks.dat"
+    predictor = dlib.shape_predictor(model) # link to model: http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
 
     while run_event.is_set(): #while the thread is active we loop
         ret, image = video_capture.read()
@@ -122,28 +144,32 @@ def cvloop(run_event):
 
         for face in faces: #if there are faces
             (x,y,w,h) = (face.left(), face.top(), face.width(), face.height())
+            # *** Facial Landmarks detection
+            shape = predictor(gray, face)
+            shape = face_utils.shape_to_np(shape)
+            incl = calculate_inclination(shape[17], shape[26]) #inclination based on eyebrows
 
             #hat condition
             if SPRITES[0]:
-                apply_sprite(image, "./sprites/hat.png",w,x,y)
+                apply_sprite(image, "./sprites/hat.png",w,x,y, incl)
 
             #mustache condition
             if SPRITES[1]:
                 #empirically mouth is at 2/3 of the face from the top
                 #empirically the width of mustache is have of face's width (offset of w/4)
                 #we look for mouths only from the half of the face (to avoid false positives)
-                apply_sprite2feature(image, "./sprites/mustache.png", haar_mouth, w/4, 2*h/3, h/2, True, w/2, x, y, w, h)
+                apply_sprite2feature(image, "./sprites/mustache.png", haar_mouth, w/4, 2*h/3, h/2, True, w/2, x, y, w, h, incl)
 
             #glasses condition
             if SPRITES[3]:
                 #empirically eyes are at 1/3 of the face from the top
-                apply_sprite2feature(image, "./sprites/glasses.png", haar_eyes, 0, h/3, 0, False, w, x, y, w, h)
+                apply_sprite2feature(image, "./sprites/glasses.png", haar_eyes, 0, h/3, 0, False, w, x, y, w, h, incl)
 
             #flies condition
             if SPRITES[2]:
                 #to make the "animation" we read each time a different image of that folder
                 # the images are placed in the correct order to give the animation impresion
-                apply_sprite(image, dir_+flies[i],w,x,y)
+                apply_sprite(image, dir_+flies[i],w,x,y, incl)
                 i+=1
                 i = 0 if i >= len(flies) else i #when done with all images of that folder, begin again
 
