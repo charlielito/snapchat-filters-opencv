@@ -31,8 +31,20 @@ def calculate_boundbox(list_coordinates):
     h = max(list_coordinates[:,1]) - y
     return (x,y,w,h)
 
-def get_face_boundbox(points, size):
-    pass
+def get_face_boundbox(points, face_part):
+    if face_part == 1:
+        (x,y,w,h) = calculate_boundbox(points[17:22]) #left eyebrow
+    elif face_part == 2:
+        (x,y,w,h) = calculate_boundbox(points[22:27]) #right eyebrow
+    elif face_part == 3:
+        (x,y,w,h) = calculate_boundbox(points[36:42]) #left eye
+    elif face_part == 4:
+        (x,y,w,h) = calculate_boundbox(points[42:48]) #right eye
+    elif face_part == 5:
+        (x,y,w,h) = calculate_boundbox(points[29:36]) #nose
+    elif face_part == 6:
+        (x,y,w,h) = calculate_boundbox(points[48:68]) #mouth
+    return (x,y,w,h)
 
 while cv2.getWindowProperty('Video', 0) >= 0:
     # Capture frame-by-frame
@@ -47,13 +59,8 @@ while cv2.getWindowProperty('Video', 0) >= 0:
     	# convert the facial landmark (x, y)-coordinates to a NumPy array
         shape = predictor(gray, rect)
     	shape = face_utils.shape_to_np(shape)
-        (x,y,w,h) = calculate_boundbox(shape[36:42]) #left eye
-        (x,y,w,h) = calculate_boundbox(shape[42:48]) #right eye
-        (x,y,w,h) = calculate_boundbox(shape[48:68]) #mouth
-        (x,y,w,h) = calculate_boundbox(shape[29:36]) #nose
-        (x,y,w,h) = calculate_boundbox(shape[17:22]) #left eyebrow
-        (x,y,w,h) = calculate_boundbox(shape[22:27]) #right eyebrow
 
+        (x,y,w,h) = get_face_boundbox(shape, 1)
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
         incl = calculate_inclination(shape[17], shape[26])

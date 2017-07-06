@@ -14,6 +14,12 @@ def apply_Haar_filter(img, haar_cascade,scaleFact = 1.1, minNeigh = 5, minSizeW 
     )
     return features
 
+
+BLUE = (255,0,0)
+GREEN = (0,255,0)
+RED = (0,0,255)
+YELL = (0,255,255)
+
 #Filters path
 haar_faces = cv2.CascadeClassifier('./filters/haarcascade_frontalface_default.xml')
 haar_eyes = cv2.CascadeClassifier('./filters/haarcascade_eye.xml')
@@ -35,21 +41,21 @@ while cv2.getWindowProperty('Video', 0) >= 0:
     faces = apply_Haar_filter(frame, haar_faces, 1.3 , 5, 30)
 
     for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (255,0,0), 2) #blue
+        cv2.rectangle(frame, (x, y), (x+w, y+h), BLUE, 2) #blue
 
         sub_img = frame[y:y+h,x:x+w,:]
         eyes = apply_Haar_filter(sub_img, haar_eyes, 1.3 , 10, 10)
         for (x2, y2, w2, h2) in eyes:
-            cv2.rectangle(frame, (x+x2, y+y2), (x + x2+w2, y + y2+h2), (255,255,0), 2)
+            cv2.rectangle(frame, (x+x2, y+y2), (x + x2+w2, y + y2+h2), YELL, 2)
 
         nose = apply_Haar_filter(sub_img, haar_nose, 1.3 , 8, 10)
         for (x2, y2, w2, h2) in nose:
-            cv2.rectangle(frame, (x+x2, y+y2), (x + x2+w2, y + y2+h2), (0,0,255), 2) #red
+            cv2.rectangle(frame, (x+x2, y+y2), (x + x2+w2, y + y2+h2), RED, 2) #red
 
         sub_img2 = frame[y + h/2:y+h,x:x+w,:] #only analize half of face for mouth
         mouth = apply_Haar_filter(sub_img2, haar_mouth, 1.3 , 10, 10)
         for (x2, y2, w2, h2) in mouth:
-            cv2.rectangle(frame, (x+x2, y+h/2+y2), (x + x2+w2, y+h/2+y2+h2), (0,255,0), 2) #green
+            cv2.rectangle(frame, (x+x2, y+h/2+y2), (x + x2+w2, y+h/2+y2+h2), GREEN, 2) #green
         #cv2.imshow('Face', sub_img)
         #cv2.imshow('Face/2', sub_img2)
 
