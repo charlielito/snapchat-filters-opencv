@@ -24,6 +24,15 @@ def calculate_inclination(point1, point2):
     incl = -180/math.pi*math.atan((float(y2-y1))/(x2-x1))
     return incl
 
+def calculate_boundbox(list_coordinates):
+    x = min(list_coordinates[:,0])
+    y = min(list_coordinates[:,1])
+    w = max(list_coordinates[:,0]) - x
+    h = max(list_coordinates[:,1]) - y
+    return (x,y,w,h)
+
+def get_face_boundbox(points, size):
+    pass
 
 while cv2.getWindowProperty('Video', 0) >= 0:
     # Capture frame-by-frame
@@ -37,8 +46,15 @@ while cv2.getWindowProperty('Video', 0) >= 0:
     	# determine the facial landmarks for the face region, then
     	# convert the facial landmark (x, y)-coordinates to a NumPy array
         shape = predictor(gray, rect)
-        shape = face_utils.shape_to_np(shape)
+    	shape = face_utils.shape_to_np(shape)
+        (x,y,w,h) = calculate_boundbox(shape[36:42]) #left eye
+        (x,y,w,h) = calculate_boundbox(shape[42:48]) #right eye
+        (x,y,w,h) = calculate_boundbox(shape[48:68]) #mouth
+        (x,y,w,h) = calculate_boundbox(shape[29:36]) #nose
+        (x,y,w,h) = calculate_boundbox(shape[17:22]) #left eyebrow
+        (x,y,w,h) = calculate_boundbox(shape[22:27]) #right eyebrow
 
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
         incl = calculate_inclination(shape[17], shape[26])
         #print incl
