@@ -38,7 +38,7 @@ if __name__ == '__main__' :
     #need to convert to a list of tuples
     points1 = list(map(tuple, points1))
 
-    video_capture = cv2.VideoCapture(1)
+    video_capture = cv2.VideoCapture(0)
 
     while (True):
         print "what"
@@ -68,8 +68,7 @@ if __name__ == '__main__' :
             sizeImg2 = img2.shape
             rect = (0, 0, sizeImg2[1], sizeImg2[0])
 
-            x,y, w, h = rect.left(), rect.top(), rect.width(), rect.height()
-            print x,y,w,h
+
             dt = calculateDelaunayTriangles(rect, hull2)
 
             if len(dt) == 0:

@@ -37,7 +37,7 @@ while cv2.getWindowProperty('Video', 0) >= 0:
     	# determine the facial landmarks for the face region, then
     	# convert the facial landmark (x, y)-coordinates to a NumPy array
         shape = predictor(gray, rect)
-    	shape = face_utils.shape_to_np(shape)
+        shape = face_utils.shape_to_np(shape)
 
 
         incl = calculate_inclination(shape[17], shape[26])
@@ -55,8 +55,8 @@ while cv2.getWindowProperty('Video', 0) >= 0:
 
         # loop over the (x, y)-coordinates for the facial landmarks
     	# and draw them on the image
-    	for (x, y) in shape:
-    		cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
+        for (x, y) in shape:
+            cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
 
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF

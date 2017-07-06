@@ -223,7 +223,7 @@ def terminate():
         print "Closing thread opencv..."
         run_event.clear()
         time.sleep(1)
-        #action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
+        action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
         root.destroy()
         print "All closed! Chao"
 
