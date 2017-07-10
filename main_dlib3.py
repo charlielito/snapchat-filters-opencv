@@ -1,7 +1,6 @@
 # Requirements:
 # pip install tk
 # pip install pillow
-
 from Tkinter import *
 from PIL import Image
 from PIL import ImageTk
@@ -12,6 +11,10 @@ from os import listdir
 from os.path import isfile, join
 import time
 
+import dlib
+from imutils import face_utils, rotate_bound
+import math
+
 ### Function to set wich sprite must be drawn
 def put_sprite(num):
     global SPRITES, BTNS
@@ -21,8 +24,8 @@ def put_sprite(num):
     else:
         BTNS[num].config(relief=RAISED)
 
-#Draws sprite over a image
-#It uses the alpha chanel to see which pixels need to be reeplaced
+# Draws sprite over a image
+# It uses the alpha chanel to see which pixels need to be reeplaced
 # Input: image, sprite: numpy arrays
 # output: resulting merged image
 def draw_sprite(frame, sprite, x_offset, y_offset):
@@ -33,7 +36,6 @@ def draw_sprite(frame, sprite, x_offset, y_offset):
             frame[y_offset:y_offset+M, x_offset:x_offset+N, c] =  \
             sprite[:,:,c] * (sprite[:,:,3]/255.0) +  frame[y_offset:y_offset+M, x_offset:x_offset+N, c] * (1.0 - sprite[:,:,3]/255.0)
     return frame
-
 
 # Returns the rectangles
 # Img is a BGR image
@@ -65,15 +67,18 @@ def adjust_sprite2head(sprite, head_width, head_ypos):
             y_orig = 0 #the sprite then begins at the top of the image
     return (sprite, y_orig)
 
-
-def apply_sprite(image, path2sprite,w,x,y):
+# Applies sprite to image detected face's coordinates and adjust it to head
+def apply_sprite(image, path2sprite,w,x,y, angle):
     sprite = cv2.imread(path2sprite,-1)
+    sprite = rotate_bound(sprite, angle)
     (sprite, y_final) = adjust_sprite2head(sprite, w, y)
     image = draw_sprite(image,sprite,x, y_final)
 
-
-def apply_sprite2feature(image, sprite_path, haar_filter, x_offset, y_offset, y_offset_image, adjust2feature, desired_width, x, y, w, h):
+# Applies sprite to image in a specific haar filter detecting a feature with other parameters:
+#
+def apply_sprite2feature(image, sprite_path, haar_filter, x_offset, y_offset, y_offset_image, adjust2feature, desired_width, x, y, w, h, angle):
     sprite = cv2.imread(sprite_path,-1)
+    sprite = rotate_bound(sprite, angle)
     (h_sprite,w_sprite) = (sprite.shape[0], sprite.shape[1])
 
     xpos = x + x_offset
@@ -95,6 +100,37 @@ def apply_sprite2feature(image, sprite_path, haar_filter, x_offset, y_offset, y_
     sprite = cv2.resize(sprite, (0,0), fx=factor, fy=factor)
     image = draw_sprite(image,sprite,xpos,ypos)
 
+#points are tuples in the form (x,y)
+# returns angle between points in degrees
+def calculate_inclination(point1, point2):
+    x1,x2,y1,y2 = point1[0], point2[0], point1[1], point2[1]
+    incl = 180/math.pi*math.atan((float(y2-y1))/(x2-x1))
+    return incl
+
+
+def calculate_boundbox(list_coordinates):
+    x = min(list_coordinates[:,0])
+    y = min(list_coordinates[:,1])
+    w = max(list_coordinates[:,0]) - x
+    h = max(list_coordinates[:,1]) - y
+    return (x,y,w,h)
+
+def get_face_boundbox(points, face_part):
+    if face_part == 1:
+        (x,y,w,h) = calculate_boundbox(points[17:22]) #left eyebrow
+    elif face_part == 2:
+        (x,y,w,h) = calculate_boundbox(points[22:27]) #right eyebrow
+    elif face_part == 3:
+        (x,y,w,h) = calculate_boundbox(points[36:42]) #left eye
+    elif face_part == 4:
+        (x,y,w,h) = calculate_boundbox(points[42:48]) #right eye
+    elif face_part == 5:
+        (x,y,w,h) = calculate_boundbox(points[29:36]) #nose
+    elif face_part == 6:
+        (x,y,w,h) = calculate_boundbox(points[48:68]) #mouth
+    return (x,y,w,h)
+
+
 #Principal Loop where openCV (magic) ocurs
 def cvloop(run_event):
     global panelA
@@ -107,39 +143,43 @@ def cvloop(run_event):
     (x,y,w,h) = (0,0,10,10) #whatever initial values
 
     #Filters path
-    haar_faces = cv2.CascadeClassifier('./filters/haarcascade_frontalface_default.xml')
-    haar_eyes = cv2.CascadeClassifier('./filters/haarcascade_eye.xml')
-    haar_mouth = cv2.CascadeClassifier('./filters/Mouth.xml')
-    haar_nose = cv2.CascadeClassifier('./filters/Nose.xml')
+    detector = dlib.get_frontal_face_detector()
+
+    #Facial landmarks
+    print("[INFO] loading facial landmark predictor...")
+    model = "shape_predictor_68_face_landmarks.dat"
+    predictor = dlib.shape_predictor(model) # link to model: http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
 
     while run_event.is_set(): #while the thread is active we loop
         ret, image = video_capture.read()
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        faces = detector(gray, 0)
 
-        faces = apply_Haar_filter(image, haar_faces, 1.3 , 5, 30)
-        for (x,y,w,h) in faces: #if there are faces
-            #take first face found (x,y,w,h) = (faces[0,0],faces[0,1],faces[0,2],faces[0,3])
+        for face in faces: #if there are faces
+            (x,y,w,h) = (face.left(), face.top(), face.width(), face.height())
+            # *** Facial Landmarks detection
+            shape = predictor(gray, face)
+            shape = face_utils.shape_to_np(shape)
+            incl = calculate_inclination(shape[17], shape[26]) #inclination based on eyebrows
 
             #hat condition
             if SPRITES[0]:
-                apply_sprite(image, "./sprites/hat.png",w,x,y)
+                apply_sprite(image, "./sprites/hat.png",w,x,y, incl)
 
             #mustache condition
             if SPRITES[1]:
-                #empirically mouth is at 2/3 of the face from the top
-                #empirically the width of mustache is have of face's width (offset of w/4)
-                #we look for mouths only from the half of the face (to avoid false positives)
-                apply_sprite2feature(image, "./sprites/mustache.png", haar_mouth, w/4, 2*h/3, h/2, True, w/2, x, y, w, h)
+                (x,y,w,h) = get_face_boundbox(shape, 6)
+
 
             #glasses condition
             if SPRITES[3]:
-                #empirically eyes are at 1/3 of the face from the top
-                apply_sprite2feature(image, "./sprites/glasses.png", haar_eyes, 0, h/3, 0, False, w, x, y, w, h)
+                (x,y,w,h) = get_face_boundbox(shape, 1)
 
             #flies condition
             if SPRITES[2]:
                 #to make the "animation" we read each time a different image of that folder
                 # the images are placed in the correct order to give the animation impresion
-                apply_sprite(image, dir_+flies[i],w,x,y)
+                apply_sprite(image, dir_+flies[i],w,x,y, incl)
                 i+=1
                 i = 0 if i >= len(flies) else i #when done with all images of that folder, begin again
 
@@ -193,7 +233,7 @@ def terminate():
         print "Closing thread opencv..."
         run_event.clear()
         time.sleep(1)
-        #action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
+        action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
         root.destroy()
         print "All closed! Chao"
 

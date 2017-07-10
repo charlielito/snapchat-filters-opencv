@@ -107,13 +107,6 @@ def calculate_inclination(point1, point2):
     incl = 180/math.pi*math.atan((float(y2-y1))/(x2-x1))
     return incl
 
-#Rotates image by angle degrees
-def rotate_sprite(img, angle):
-    rows,cols = img.shape[0], img.shape[1]
-    M = cv2.getRotationMatrix2D((cols/2,rows/2),angle,1)
-    dst = cv2.warpAffine(img,M,(cols,rows))
-    return dst
-
 
 #Principal Loop where openCV (magic) ocurs
 def cvloop(run_event):
