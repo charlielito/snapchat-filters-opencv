@@ -6,6 +6,18 @@ import dlib
 import cv2, math
 import numpy as np
 
+def is_out_of_image(rects, imgW, imgH):
+    for rect in rects:
+        x, y, w, h = rect.left(), rect.top(), rect.width(), rect.height()
+        if x < 0 or y <0 or (y+h) > imgH or (x+w) > imgW:
+            return True
+    return False
+
+def is_out_of_image_points(points, imgW, imgH):
+    for x,y in points:
+        if x < 0 or y < 0 or y > imgH or x > imgW:
+            return True
+    return False
 
 # initialize dlib's face detector (HOG-based) and then create
 # the facial landmark predictor
@@ -53,12 +65,17 @@ while cv2.getWindowProperty('Video', 0) >= 0:
     # detect faces in the grayscale frame
     rects = detector(gray, 0)
 
+    #print is_out_of_image(rects, gray.shape[1], gray.shape[0])
+
     # loop over the face detections
     for rect in rects:
     	# determine the facial landmarks for the face region, then
     	# convert the facial landmark (x, y)-coordinates to a NumPy array
         shape = predictor(gray, rect)
+
     	shape = face_utils.shape_to_np(shape)
+
+        print is_out_of_image_points(shape, gray.shape[1], gray.shape[0])
 
         (x,y,w,h) = get_face_boundbox(shape, 1)
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
@@ -71,9 +88,10 @@ while cv2.getWindowProperty('Video', 0) >= 0:
         dst = cv2.warpAffine(img,M,(cols,rows))
         cv2.imshow('sprite',dst)
 
-        print shape[62][1] -shape[66][1]
+        #print shape[62][1] -shape[66][1]
 
         x,y, w, h = rect.left(), rect.top(), rect.width(), rect.height()
+
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
 
         # loop over the (x, y)-coordinates for the facial landmarks
