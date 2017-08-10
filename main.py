@@ -5,12 +5,10 @@
 from Tkinter import *
 from PIL import Image
 from PIL import ImageTk
-import cv2
-import threading
+import cv2, threading, os, time
 from threading import Thread
 from os import listdir
 from os.path import isfile, join
-import time
 
 ### Function to set wich sprite must be drawn
 def put_sprite(num):
@@ -156,6 +154,11 @@ def cvloop(run_event):
 
 # Initialize GUI object
 root = Tk()
+root.title("Snap chat filters")
+this_dir = os.path.dirname(os.path.realpath(__file__))
+# Adds a custom logo
+imgicon = PhotoImage(file=os.path.join(this_dir,'sprites/icon.png'))
+root.tk.call('wm', 'iconphoto', root._w, imgicon)
 
 ##Create 3 buttons and assign their corresponding function to active sprites
 btn1 = Button(root, text="Hat", command = lambda: put_sprite(0))
