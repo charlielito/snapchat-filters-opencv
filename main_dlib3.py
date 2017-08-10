@@ -4,12 +4,10 @@
 from Tkinter import *
 from PIL import Image
 from PIL import ImageTk
-import cv2
-import threading
+import cv2, threading, os, time
 from threading import Thread
 from os import listdir
 from os.path import isfile, join
-import time
 
 import dlib
 from imutils import face_utils, rotate_bound
@@ -29,12 +27,23 @@ def put_sprite(num):
 # Input: image, sprite: numpy arrays
 # output: resulting merged image
 def draw_sprite(frame, sprite, x_offset, y_offset):
-    (M,N) = (sprite.shape[0], sprite.shape[1])
+    (h,w) = (sprite.shape[0], sprite.shape[1])
+    (imgH,imgW) = (frame.shape[0], frame.shape[1])
+
+    if y_offset+h >= imgH: #if sprite gets out of image in the bottom
+        sprite = sprite[0:imgH-y_offset,:,:]
+
+    if x_offset+w >= imgW: #if sprite gets out of image to the right
+        sprite = sprite[:,0:imgW-x_offset,:]
+
+    if x_offset < 0: #if sprite gets out of image to the left
+        sprite = sprite[abs(x_offset)::,:,:]
+
     #for each RGB chanel
     for c in range(3):
             #chanel 4 is alpha: 255 is not transpartne, 0 is transparent background
-            frame[y_offset:y_offset+M, x_offset:x_offset+N, c] =  \
-            sprite[:,:,c] * (sprite[:,:,3]/255.0) +  frame[y_offset:y_offset+M, x_offset:x_offset+N, c] * (1.0 - sprite[:,:,3]/255.0)
+            frame[y_offset:y_offset+h, x_offset:x_offset+w, c] =  \
+            sprite[:,:,c] * (sprite[:,:,3]/255.0) +  frame[y_offset:y_offset+h, x_offset:x_offset+w, c] * (1.0 - sprite[:,:,3]/255.0)
     return frame
 
 #Adjust the given sprite to the head's width and position
@@ -54,7 +63,7 @@ def adjust_sprite2head(sprite, head_width, head_ypos, ontop = True):
 # Applies sprite to image detected face's coordinates and adjust it to head
 def apply_sprite(image, path2sprite,w,x,y, angle, ontop = True):
     sprite = cv2.imread(path2sprite,-1)
-    print sprite.shape
+    #print sprite.shape
     sprite = rotate_bound(sprite, angle)
     (sprite, y_final) = adjust_sprite2head(sprite, w, y, ontop)
     image = draw_sprite(image,sprite,x, y_final)
@@ -122,10 +131,7 @@ def cvloop(run_event):
             incl = calculate_inclination(shape[17], shape[26]) #inclination based on eyebrows
 
             # condition to see if mouth is open
-            if (shape[66][1] -shape[62][1]) >= 10: #y coordiantes of landmark points of lips
-                (x0,y0,w0,h0) = get_face_boundbox(shape, 6)
-                apply_sprite(image, "./sprites/rainbow.png",w0,x0,y0, incl, ontop = False)
-
+            is_mouth_open = (shape[66][1] -shape[62][1]) >= 10 #y coordiantes of landmark points of lips
 
             #hat condition
             if SPRITES[0]:
@@ -135,7 +141,6 @@ def cvloop(run_event):
             if SPRITES[1]:
                 (x1,y1,w1,h1) = get_face_boundbox(shape, 6)
                 apply_sprite(image, "./sprites/mustache.png",w1,x1,y1, incl)
-
 
             #glasses condition
             if SPRITES[3]:
@@ -151,9 +156,19 @@ def cvloop(run_event):
                 i = 0 if i >= len(flies) else i #when done with all images of that folder, begin again
 
             #doggy condition
+            (x0,y0,w0,h0) = get_face_boundbox(shape, 6) #bound box of mouth
             if SPRITES[4]:
-                (x3,y3,_,h3) = get_face_boundbox(shape, 1)
-                apply_sprite(image, "./sprites/doggy.png",w,x,y, incl, ontop = False)
+                (x3,y3,w3,h3) = get_face_boundbox(shape, 5) #nose
+                apply_sprite(image, "./sprites/doggy_nose.png",w3,x3,y3, incl, ontop = False)
+
+                apply_sprite(image, "./sprites/doggy_ears.png",w,x,y, incl)
+
+                if is_mouth_open:
+                    apply_sprite(image, "./sprites/doggy_tongue.png",w0,x0,y0, incl, ontop = False)
+            else:
+                if is_mouth_open:
+                    apply_sprite(image, "./sprites/rainbow.png",w0,x0,y0, incl, ontop = False)
+
 
         # OpenCV represents image as BGR; PIL but RGB, we need to change the chanel order
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -164,26 +179,32 @@ def cvloop(run_event):
         # Actualize the image in the panel to show it
         panelA.configure(image=image)
         panelA.image = image
+
     video_capture.release()
 
 # Initialize GUI object
 root = Tk()
+root.title("Snap chat filters")
+this_dir = os.path.dirname(os.path.realpath(__file__))
+# Adds a custom logo
+imgicon = PhotoImage(file=os.path.join(this_dir,'sprites/icon.png'))
+root.tk.call('wm', 'iconphoto', root._w, imgicon)
 
 ##Create 5 buttons and assign their corresponding function to active sprites
 btn1 = Button(root, text="Hat", command = lambda: put_sprite(0))
-btn1.pack(side="top", fill="both", expand="no", padx="10", pady="10")
+btn1.pack(side="top", fill="both", expand="no", padx="5", pady="5")
 
 btn2 = Button(root, text="Mustache", command = lambda: put_sprite(1))
-btn2.pack(side="top", fill="both", expand="no", padx="10", pady="10")
+btn2.pack(side="top", fill="both", expand="no", padx="5", pady="5")
 
 btn3 = Button(root, text="Flies", command = lambda: put_sprite(2))
-btn3.pack(side="top", fill="both", expand="no", padx="10", pady="10")
+btn3.pack(side="top", fill="both", expand="no", padx="5", pady="5")
 
 btn4 = Button(root, text="Glasses", command = lambda: put_sprite(3) )
-btn4.pack(side="top", fill="both", expand="no", padx="10", pady="10")
+btn4.pack(side="top", fill="both", expand="no", padx="5", pady="5")
 
 btn5 = Button(root, text="Doggy", command = lambda: put_sprite(4) )
-btn5.pack(side="top", fill="both", expand="no", padx="10", pady="10")
+btn5.pack(side="top", fill="both", expand="no", padx="5", pady="5")
 
 
 # Create the panel where webcam image will be shown

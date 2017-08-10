@@ -5,6 +5,8 @@ import time
 import dlib
 import cv2, math
 import numpy as np
+from imutils import face_utils, rotate_bound
+
 
 def is_out_of_image(rects, imgW, imgH):
     for rect in rects:
@@ -82,10 +84,11 @@ while cv2.getWindowProperty('Video', 0) >= 0:
 
         incl = calculate_inclination(shape[17], shape[26])
         #print incl
-        img = cv2.imread("./sprites/hat.png")
+        img = cv2.imread("./sprites/rainbow.png")
         rows,cols = img.shape[0], img.shape[1]
         M = cv2.getRotationMatrix2D((cols/2,rows/2),incl,1)
         dst = cv2.warpAffine(img,M,(cols,rows))
+        dst = rotate_bound(img, incl)
         cv2.imshow('sprite',dst)
 
         print shape[62][1] - shape[66][1]
