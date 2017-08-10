@@ -24,12 +24,23 @@ def put_sprite(num):
 # Input: image, sprite: numpy arrays
 # output: resulting merged image
 def draw_sprite(frame, sprite, x_offset, y_offset):
-    (M,N) = (sprite.shape[0], sprite.shape[1])
+    (h,w) = (sprite.shape[0], sprite.shape[1])
+    (imgH,imgW) = (frame.shape[0], frame.shape[1])
+
+    if y_offset+h >= imgH: #if sprite gets out of image in the bottom
+        sprite = sprite[0:imgH-y_offset,:,:]
+
+    if x_offset+w >= imgW: #if sprite gets out of image to the right
+        sprite = sprite[:,0:imgW-x_offset,:]
+
+    if x_offset < 0: #if sprite gets out of image to the left
+        sprite = sprite[abs(x_offset)::,:,:]
+
     #for each RGB chanel
     for c in range(3):
             #chanel 4 is alpha: 255 is not transpartne, 0 is transparent background
-            frame[y_offset:y_offset+M, x_offset:x_offset+N, c] =  \
-            sprite[:,:,c] * (sprite[:,:,3]/255.0) +  frame[y_offset:y_offset+M, x_offset:x_offset+N, c] * (1.0 - sprite[:,:,3]/255.0)
+            frame[y_offset:y_offset+h, x_offset:x_offset+w, c] =  \
+            sprite[:,:,c] * (sprite[:,:,3]/255.0) +  frame[y_offset:y_offset+h, x_offset:x_offset+w, c] * (1.0 - sprite[:,:,3]/255.0)
     return frame
 
 
@@ -157,7 +168,7 @@ root = Tk()
 root.title("Snap chat filters")
 this_dir = os.path.dirname(os.path.realpath(__file__))
 # Adds a custom logo
-imgicon = PhotoImage(file=os.path.join(this_dir,'sprites/icon.png'))
+imgicon = PhotoImage(file=os.path.join(this_dir,'imgs/icon.png'))
 root.tk.call('wm', 'iconphoto', root._w, imgicon)
 
 ##Create 3 buttons and assign their corresponding function to active sprites

@@ -15,8 +15,8 @@ The files containing the Haar Filters descriptions were taken from http://alerei
      * tkinter
 
 #### Easy install
-Build `OpenCV` or install the light version with `pip install python-opencv`. For Windows users it is always easier to just download the binaries of OpenCV and execute them, see [this web page](http://docs.opencv.org/trunk/d5/de5/tutorial_py_setup_in_windows.html). For `TKinter` in Linux just execute: `apt-get install python-tk` (python binaries in windows usually have Tkinter already installed). 
-For python dependences just execute 
+Build `OpenCV` or install the light version with `pip install python-opencv`. For Windows users it is always easier to just download the binaries of OpenCV and execute them, see [this web page](http://docs.opencv.org/trunk/d5/de5/tutorial_py_setup_in_windows.html). For `TKinter` in Linux just execute: `apt-get install python-tk` (python binaries in windows usually have Tkinter already installed).
+For python dependences just execute
 ```
 pip install -r requirements.txt
 ```
@@ -29,4 +29,4 @@ In Windows just double click de file `main.py` or execute in the console the fol
 python main.py
 ```
 
-[s1]: https://raw.githubusercontent.com/charlielito/snapchat-filters-opencv/master/example.png "S"
+[s1]: https://raw.githubusercontent.com/charlielito/snapchat-filters-opencv/master/imgs/example.png "S"

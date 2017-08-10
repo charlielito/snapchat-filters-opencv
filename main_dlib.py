@@ -115,7 +115,7 @@ def cvloop(run_event):
 
     #Facial landmarks
     print("[INFO] loading facial landmark predictor...")
-    model = "shape_predictor_68_face_landmarks.dat"
+    model = "filters/shape_predictor_68_face_landmarks.dat"
     predictor = dlib.shape_predictor(model) # link to model: http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
 
     while run_event.is_set(): #while the thread is active we loop
@@ -187,7 +187,7 @@ root = Tk()
 root.title("Snap chat filters")
 this_dir = os.path.dirname(os.path.realpath(__file__))
 # Adds a custom logo
-imgicon = PhotoImage(file=os.path.join(this_dir,'sprites/icon.png'))
+imgicon = PhotoImage(file=os.path.join(this_dir,'imgs/icon.png'))
 root.tk.call('wm', 'iconphoto', root._w, imgicon)
 
 ##Create 5 buttons and assign their corresponding function to active sprites

@@ -8,23 +8,10 @@ import numpy as np
 from imutils import face_utils, rotate_bound
 
 
-def is_out_of_image(rects, imgW, imgH):
-    for rect in rects:
-        x, y, w, h = rect.left(), rect.top(), rect.width(), rect.height()
-        if x < 0 or y <0 or (y+h) > imgH or (x+w) > imgW:
-            return True
-    return False
-
-def is_out_of_image_points(points, imgW, imgH):
-    for x,y in points:
-        if x < 0 or y < 0 or y > imgH or x > imgW:
-            return True
-    return False
-
 # initialize dlib's face detector (HOG-based) and then create
 # the facial landmark predictor
 print("[INFO] loading facial landmark predictor...")
-model = "shape_predictor_68_face_landmarks.dat"
+model = "filters/shape_predictor_68_face_landmarks.dat"
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(model) # link to model: http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
 
@@ -67,8 +54,6 @@ while cv2.getWindowProperty('Video', 0) >= 0:
     # detect faces in the grayscale frame
     rects = detector(gray, 0)
 
-    #print is_out_of_image(rects, gray.shape[1], gray.shape[0])
-
     # loop over the face detections
     for rect in rects:
     	# determine the facial landmarks for the face region, then
@@ -77,21 +62,20 @@ while cv2.getWindowProperty('Video', 0) >= 0:
 
     	shape = face_utils.shape_to_np(shape)
 
-        #print is_out_of_image_points(shape, gray.shape[1], gray.shape[0])
-
-        (x,y,w,h) = get_face_boundbox(shape, 1)
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        for i in range(1,7):
+            (x,y,w,h) = get_face_boundbox(shape, i)
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 1)
 
         incl = calculate_inclination(shape[17], shape[26])
-        #print incl
-        img = cv2.imread("./sprites/rainbow.png")
+
+        img = cv2.imread("./sprites/doggy_ears.png")
         rows,cols = img.shape[0], img.shape[1]
         M = cv2.getRotationMatrix2D((cols/2,rows/2),incl,1)
         dst = cv2.warpAffine(img,M,(cols,rows))
         dst = rotate_bound(img, incl)
         cv2.imshow('sprite',dst)
 
-        print shape[62][1] - shape[66][1]
+        print "Pixels distance points in mouth: ", shape[66][1] - shape[62][1]
 
         x,y, w, h = rect.left(), rect.top(), rect.width(), rect.height()
 
