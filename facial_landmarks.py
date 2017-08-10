@@ -75,7 +75,7 @@ while cv2.getWindowProperty('Video', 0) >= 0:
 
     	shape = face_utils.shape_to_np(shape)
 
-        print is_out_of_image_points(shape, gray.shape[1], gray.shape[0])
+        #print is_out_of_image_points(shape, gray.shape[1], gray.shape[0])
 
         (x,y,w,h) = get_face_boundbox(shape, 1)
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
@@ -88,7 +88,7 @@ while cv2.getWindowProperty('Video', 0) >= 0:
         dst = cv2.warpAffine(img,M,(cols,rows))
         cv2.imshow('sprite',dst)
 
-        #print shape[62][1] -shape[66][1]
+        print shape[62][1] - shape[66][1]
 
         x,y, w, h = rect.left(), rect.top(), rect.width(), rect.height()
 
