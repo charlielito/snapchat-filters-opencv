@@ -16,7 +16,10 @@ The Dlib implementation of this app uses a [Histogram of Oriented Gradients (HOG
 * OpenCV 3.0+ with python bindings
 * Python 2.7
      * pillow
+     * numpy
      * tkinter
+* Python bindings of dlib.
+
 
 #### Easy install
 Build `OpenCV` or install the light version with `pip install python-opencv`. For Windows users it is always easier to just download the binaries of OpenCV and execute them, see [this web page](http://docs.opencv.org/trunk/d5/de5/tutorial_py_setup_in_windows.html). For `TKinter` in Linux just execute: `apt-get install python-tk` (python binaries in windows usually have Tkinter already installed).
