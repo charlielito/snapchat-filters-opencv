@@ -1,1 +1,4 @@
-pillow
+pillow<=6
+imutils
+numpy
+opencv-python<4

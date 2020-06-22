@@ -13,10 +13,11 @@ The Dlib implementation of this app uses a [Histogram of Oriented Gradients (HOG
 
 
 ## Requirements
-* OpenCV 3.0+ with python bindings
+* OpenCV 3.0+ <4.0 with python bindings
 * Python 2.7
      * pillow
      * numpy
+     * imutils
      * tkinter
 * Python bindings of dlib.
 
@@ -34,9 +35,7 @@ pip install -r requirements.txt
 
 For Linux Users make sure you have the prerequisites:
 ```
-sudo apt-get install build-essential cmake
-sudo apt-get install libgtk-3-dev
-sudo apt-get install libboost-all-dev
+sudo apt-get install -y build-essential cmake libgtk-3-dev libboost-all-dev
 ```
 Finally just `pip install it` with: `pip install dlib`
 
