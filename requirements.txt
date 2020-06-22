@@ -1,4 +1,4 @@
-pillow<=6
+pillow>=6.2.2,<7
 imutils
 numpy
 opencv-python<4
