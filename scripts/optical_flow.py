@@ -3,8 +3,11 @@ import time
 
 import cv2
 import numpy as np
-import pyfakewebcam
 from concurrent_videocapture import ConcurrentVideoCapture
+from python_path import PythonPath
+
+with PythonPath("."):
+    import pyfakewebcam
 
 
 parser = argparse.ArgumentParser()

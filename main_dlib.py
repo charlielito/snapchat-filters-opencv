@@ -25,9 +25,12 @@ else:
 
 _streaming = False
 if _platform == "linux" or _platform == "linux2":
-    import pyfakewebcam
+    try:
+        import pyfakewebcam
 
-    _streaming = True
+        _streaming = True
+    except ImportError:
+        print("Could not import pyfakewebcam")
 
 
 ### Function to set wich sprite must be drawn

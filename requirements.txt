@@ -2,3 +2,5 @@ pillow>=6.2.2,<7
 imutils
 numpy
 opencv-python<4
+concurrent_videocapture
+python_path

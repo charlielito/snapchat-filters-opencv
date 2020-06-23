@@ -3,8 +3,11 @@ import time
 
 import cv2
 import numpy as np
-import pyfakewebcam
 from concurrent_videocapture import ConcurrentVideoCapture
+from python_path import PythonPath
+
+with PythonPath("."):
+    import pyfakewebcam
 
 
 # Parser
@@ -15,6 +18,12 @@ parser.add_argument(
     type=int,
     default=0,
     help="If different from 0, creates a virtual camera with results on that id (linux only)",
+)
+parser.add_argument(
+    "--verbose",
+    type=bool,
+    default=False,
+    help="Verbose printing of current FPS of pipeline",
 )
 args = parser.parse_args()
 
@@ -53,7 +62,7 @@ def get_snap_shot():
 
 
 def run_video_capture_pipeline(
-    transform_fn=None, verbose=True, concurrent_videocapture=True
+    transform_fn=None, verbose=args.verbose, concurrent_videocapture=True
 ):
 
     capture = ConcurrentVideoCapture if concurrent_videocapture else cv2.VideoCapture

@@ -23,7 +23,7 @@ The Dlib implementation of this app uses a [Histogram of Oriented Gradients (HOG
 
 
 #### Easy install
-Build `OpenCV` or install the light version with `sudo apt-get install libopencv-dev python-opencv`. For Windows users it is always easier to just download the binaries of OpenCV and execute them, see [this web page](http://docs.opencv.org/trunk/d5/de5/tutorial_py_setup_in_windows.html). For `TKinter` in Linux just execute: `apt-get install python-tk` (python binaries in windows usually have Tkinter already installed).
+Build `OpenCV` or install the light version with `sudo apt-get install libopencv-dev python-opencv`. For Windows users it is always easier to just download the binaries of OpenCV and execute them, see [this web page](http://docs.opencv.org/trunk/d5/de5/tutorial_py_setup_in_windows.html). For `TKinter` in Linux just execute: `apt-get install python-tk` or `apt-get install python3-tk` (python binaries in windows usually have Tkinter already installed).
 
 For python dependences just execute:
 
@@ -79,7 +79,20 @@ To use the dlib version with more interesting features run
 ```
 python main_dlib.py
 ```
+### UPDATE 2020 (LINUX USERS)
+A new functionality was added for Linux users only, that allows you to create a virtual camera and stream the results there, so other applications can "see" that camera, i.e. zoom, meet, hangouts or any other videoconference app.
 
+To use that, you need to install `v4l2loopback` with `apt-get install v4l2loopback-utils`. Then you need to create a virtual device with:
+```
+sudo modprobe v4l2loopback devices=1
+```
+Finally run:
+```
+python main_dlib.py --virtual_device 1
+```
+Note: The number of the virtual device must match with the one you created with `modprobe`
+
+An Example in Zom can be seen in the following animation:
 
 ## Comparison between OpenCv HaarCascade Classifiers and Dlib algorithms
 Here can be compared the performance in real time of the two techniques. As seen the opencv with HaarCascade  implementation is not so "stable" (i.e the hat moves a lot although the face is still). Also with the dlib version more fun things can be made and the accessories inclines with us.
@@ -88,6 +101,25 @@ Here can be compared the performance in real time of the two techniques. As seen
 ![alt text][s3]
 ### Dlib
 ![alt text][s2]
+
+## Bonus Filters 2020 (LINUX ONLY)
+I've implemented/gather some cool image level filters so it can be used in videoconference Apps (linux only). They are located in `scripts` directory. They are:
+* Canny edge detection
+* Blur faces
+* Transform to HSV color space
+* Dense optical flow
+* Sparse optical follow
+* Background substraction
+* Harry Potter Red invisibility cloak
+
+To run it simple use:
+```
+python scripts/canny.py --virtual_device 1
+```
+
+You can see some of the over zoom as follows:
+
+
 
 
 [s1]: https://raw.githubusercontent.com/charlielito/snapchat-filters-opencv/master/imgs/opencv.gif "S"

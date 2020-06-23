@@ -10,6 +10,7 @@ def invisibility(image):
 
     # converting from BGR to HSV color space
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    # cv2.imshow("hsv", hsv[..., 0])
 
     # Range for lower red
     lower_red = np.array([0, 120, 70])
