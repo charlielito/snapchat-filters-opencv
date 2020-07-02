@@ -92,7 +92,10 @@ python main_dlib.py --virtual_device 1
 ```
 Note: The number of the virtual device must match with the one you created with `modprobe`
 
-An Example in Zom can be seen in the following animation:
+An Example in Zoom can be seen in the following animation:
+
+![alt text][s7]
+
 
 ## Comparison between OpenCv HaarCascade Classifiers and Dlib algorithms
 Here can be compared the performance in real time of the two techniques. As seen the opencv with HaarCascade  implementation is not so "stable" (i.e the hat moves a lot although the face is still). Also with the dlib version more fun things can be made and the accessories inclines with us.
@@ -117,9 +120,9 @@ To run it simple use:
 python scripts/canny.py --virtual_device 1
 ```
 
-You can see some of the over zoom as follows:
+You can see some of them in the following zoom  call:
 
-
+![alt text][s8]
 
 
 [s1]: https://raw.githubusercontent.com/charlielito/snapchat-filters-opencv/master/imgs/opencv.gif "S"
@@ -133,3 +136,5 @@ You can see some of the over zoom as follows:
 [s5]: https://raw.githubusercontent.com/charlielito/snapchat-filters-opencv/master/imgs/landmarks.png "S"
 
 [s6]: https://raw.githubusercontent.com/charlielito/snapchat-filters-opencv/master/imgs/facial_landmarks_68markup.jpg "S"
+[s7]: https://storage.googleapis.com/charlielito-data/zoom-snapchat-filters.gif "S"
+[s8]: https://storage.googleapis.com/charlielito-data/zoom-cool-filters.gif "S"
