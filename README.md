@@ -136,5 +136,5 @@ You can see some of them in the following zoom  call:
 [s5]: https://raw.githubusercontent.com/charlielito/snapchat-filters-opencv/master/imgs/landmarks.png "S"
 
 [s6]: https://raw.githubusercontent.com/charlielito/snapchat-filters-opencv/master/imgs/facial_landmarks_68markup.jpg "S"
-[s7]: imgs/zoom-snapchat-filters.gif "S"
-[s8]: imgs/zoom-cool-filters.gif "S"
+[s7]: https://user-images.githubusercontent.com/8033598/87480423-ed2b0b00-c5f2-11ea-94c0-02df32062c72.gifs "S"
+[s8]: https://user-images.githubusercontent.com/8033598/87481014-1dbf7480-c5f4-11ea-9256-4aac4b1d38de.gif "S"
